@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#120b07">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="大きな数">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>大きな数チャレンジ</title>
+<style>
+  :root{
+    --bg1:#120b07;
+    --bg2:#050403;
+    --gold:#f3c45b;
+    --goldDark:#8d6416;
+    --cream:#fff6d8;
+    --red1:#7e1717;
+    --red2:#320909;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;
+    min-height:100vh;
+    min-height:100dvh;
+    background:
+      radial-gradient(circle at 50% 12%, rgba(245,196,91,.16), transparent 28%),
+      linear-gradient(var(--bg1),var(--bg2));
+    color:#fff;
+    font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .wrap{
+    width:min(1280px,97vw);
+    padding:1vh 2vw 2vh;
+    text-align:center;
+  }
+  .title{
+    font-size:clamp(28px,4vw,58px);
+    font-weight:900;
+    color:#ffe8a2;
+    text-shadow:0 2px 0 #73500e,0 0 18px rgba(255,214,104,.35);
+    margin-bottom:1.5vh;
+    letter-spacing:.08em;
+  }
+  .stage{
+    position:relative;
+    border:5px solid var(--gold);
+    outline:2px solid var(--goldDark);
+    border-radius:26px;
+    background:linear-gradient(145deg,var(--red1),var(--red2));
+    box-shadow:inset 0 0 0 6px #281006,0 0 28px rgba(243,196,91,.18);
+    min-height:44vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    padding:3.5vh 2vw;
+    overflow:hidden;
+  }
+  .label{
+    font-size:clamp(18px,2vw,29px);
+    opacity:.9;
+    margin-bottom:2.2vh;
+  }
+  .digits{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:0;
+    width:100%;
+    position:relative;
+    z-index:2;
+  }
+  .digit-box{
+    width:clamp(48px,7.8vw,96px);
+    height:clamp(80px,12vw,138px);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:clamp(54px,9vw,116px);
+    font-weight:900;
+    font-variant-numeric:tabular-nums;
+    color:#fff2bf;
+    text-shadow:
+      0 4px 0 #6e4a08,
+      0 0 8px #ffd66c,
+      0 0 20px rgba(255,213,92,.42);
+    border-bottom:4px solid rgba(255,229,143,.28);
+  }
+  .digit-box.blank{
+    color:transparent;
+    text-shadow:none;
+    border-bottom-color:rgba(255,255,255,.06);
+  }
+  .digit-box.spinning{filter:blur(.4px)}
+  .digit-box.locked{animation:lock .32s ease-out}
+  @keyframes lock{
+    0%{transform:scale(1)}
+    45%{transform:scale(1.18)}
+    100%{transform:scale(1)}
+  }
+
+  .digits.grand-final{animation:grandFinal 1.1s cubic-bezier(.2,.85,.2,1)}
+  @keyframes grandFinal{
+    0%{transform:scale(1)}
+    18%{transform:scale(1.22)}
+    38%{transform:scale(.97)}
+    58%{transform:scale(1.12)}
+    100%{transform:scale(1)}
+  }
+
+  .jaan{
+    position:absolute;
+    inset:0;
+    z-index:6;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    pointer-events:none;
+    opacity:0;
+    font-size:clamp(64px,13vw,170px);
+    font-weight:1000;
+    letter-spacing:.08em;
+    color:#fff5bc;
+    -webkit-text-stroke:3px #9a5700;
+    text-shadow:
+      0 5px 0 #6a3200,
+      0 0 14px #fff6c5,
+      0 0 35px #ffc400,
+      0 0 70px rgba(255,91,0,.8);
+    transform:scale(.25) rotate(-5deg);
+  }
+  .jaan.show{animation:jaan 1.15s ease-out}
+  @keyframes jaan{
+    0%{opacity:0;transform:scale(.25) rotate(-5deg)}
+    18%{opacity:1;transform:scale(1.23) rotate(2deg)}
+    38%{opacity:1;transform:scale(.94) rotate(0)}
+    70%{opacity:1;transform:scale(1)}
+    100%{opacity:0;transform:scale(1.04)}
+  }
+
+  .burst{
+    position:absolute;
+    inset:-20%;
+    z-index:1;
+    pointer-events:none;
+    opacity:0;
+    background:
+      repeating-conic-gradient(
+        from 0deg,
+        rgba(255,238,123,.9) 0deg 5deg,
+        transparent 5deg 12deg
+      );
+    transform:scale(.3) rotate(0deg);
+  }
+  .burst.show{animation:burst 1s ease-out}
+  @keyframes burst{
+    0%{opacity:0;transform:scale(.25) rotate(0)}
+    15%{opacity:.95;transform:scale(1) rotate(5deg)}
+    100%{opacity:0;transform:scale(1.4) rotate(14deg)}
+  }
+
+  .place-table{
+    margin-top:2.2vh;
+    display:none;
+    grid-template-columns:repeat(8,1fr);
+    width:min(860px,92vw);
+    border:2px solid #e8c86f;
+    border-radius:14px;
+    overflow:hidden;
+    background:rgba(20,8,5,.52);
+    position:relative;
+    z-index:3;
+  }
+  .place-table.show{display:grid}
+  .place{
+    padding:.55em .2em;
+    border-right:1px solid rgba(255,232,168,.38);
+    color:#fff1bd;
+    font-weight:900;
+    font-size:clamp(15px,1.8vw,23px);
+  }
+  .place:last-child{border-right:none}
+  #reading{
+    min-height:2.2em;
+    margin-top:1.8vh;
+    color:#fff2c9;
+    font-size:clamp(22px,3vw,40px);
+    font-weight:800;
+    position:relative;
+    z-index:3;
+  }
+  .controls{
+    margin-top:2.3vh;
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  button{
+    border:none;
+    border-radius:999px;
+    padding:.75em 1.45em;
+    font-size:clamp(18px,2.1vw,28px);
+    font-weight:900;
+    cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.35);
+    touch-action:manipulation;
+  }
+  button:active{
+    transform:translateY(4px);
+    box-shadow:0 2px 0 rgba(0,0,0,.35);
+  }
+  #go{
+    min-width:min(390px,84vw);
+    background:linear-gradient(#ffe89a,#e3a822);
+    color:#402700;
+  }
+  #placeBtn,#readBtn,#fsBtn{
+    background:#f5efe4;
+    color:#302317;
+  }
+  button:disabled{opacity:.45}
+  .hint{
+    margin-top:1.5vh;
+    opacity:.68;
+    font-size:clamp(13px,1.4vw,18px);
+  }
+  .flash{
+    position:fixed;
+    inset:0;
+    z-index:10;
+    pointer-events:none;
+    background:white;
+    opacity:0;
+  }
+  .flash.on{animation:flash .62s ease-out}
+  @keyframes flash{
+    0%{opacity:0}
+    10%{opacity:.92}
+    22%{opacity:.08}
+    34%{opacity:.72}
+    48%{opacity:.04}
+    100%{opacity:0}
+  }
+</style>
+</head>
+<body>
+<div class="flash" id="flash"></div>
+
+<div class="wrap">
+  <div class="title">大きな数チャレンジ</div>
+
+  <div class="stage">
+    <div class="burst" id="burst"></div>
+    <div class="jaan" id="jaan">ジャーン！</div>
+
+    <div class="label">さて、どこまで大きな数になるかな……？</div>
+
+    <div class="digits" id="digits">
+      <div class="digit-box blank"></div>
+      <div class="digit-box blank"></div>
+      <div class="digit-box blank"></div>
+      <div class="digit-box blank"></div>
+      <div class="digit-box blank"></div>
+      <div class="digit-box blank"></div>
+      <div class="digit-box blank"></div>
+      <div class="digit-box blank"></div>
+    </div>
+
+    <div class="place-table" id="placeTable">
+      <div class="place">千万</div>
+      <div class="place">百万</div>
+      <div class="place">十万</div>
+      <div class="place">万</div>
+      <div class="place">千</div>
+      <div class="place">百</div>
+      <div class="place">十</div>
+      <div class="place">一</div>
+    </div>
+
+    <div id="reading"></div>
+  </div>
+
+  <div class="controls">
+    <button id="go">発 表！</button>
+    <button id="placeBtn">位取り表を表示</button>
+    <button id="readBtn">読み方を表示</button>
+    <button id="fsBtn">全画面</button>
+  </div>
+
+  <div class="hint">1〜10,000,000からランダムに出ます。1の位から順番に止まります。</div>
+</div>
+
+<script>
+const boxes=[...document.querySelectorAll('.digit-box')];
+const digitsEl=document.getElementById('digits');
+const goBtn=document.getElementById('go');
+const placeBtn=document.getElementById('placeBtn');
+const readBtn=document.getElementById('readBtn');
+const fsBtn=document.getElementById('fsBtn');
+const placeTable=document.getElementById('placeTable');
+const readingEl=document.getElementById('reading');
+const flash=document.getElementById('flash');
+const jaan=document.getElementById('jaan');
+const burst=document.getElementById('burst');
+
+let running=false;
+let current=0;
+let placeVisible=false;
+let readingVisible=false;
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function randomNumber(){return Math.floor(Math.random()*10000000)+1}
+
+const digitKanji=["","一","二","三","四","五","六","七","八","九"];
+function under10000(n){
+  let s="";
+  for(const [v,u] of [[1000,"千"],[100,"百"],[10,"十"],[1,""]]){
+    const d=Math.floor(n/v)%10;
+    if(d){
+      if(d===1 && v>1)s+=u;
+      else s+=digitKanji[d]+u;
+    }
+  }
+  return s;
+}
+function toKanji(n){
+  if(n===10000000)return "一千万";
+  const man=Math.floor(n/10000),rest=n%10000;
+  let s="";
+  if(man)s+=under10000(man)+"万";
+  if(rest)s+=under10000(rest);
+  return s||"零";
+}
+function resetDisplay(){
+  boxes.forEach(b=>{
+    b.textContent="";
+    b.className="digit-box blank";
+  });
+}
+function renderReading(){
+  readingEl.textContent=(readingVisible&&current)?toKanji(current):"";
+  readBtn.textContent=readingVisible?"読み方をかくす":"読み方を表示";
+}
+
+function playFinalSound(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const now=ctx.currentTime;
+    const notes=[261.63,329.63,392.00,523.25];
+    notes.forEach((f,i)=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.type="triangle";
+      osc.frequency.setValueAtTime(f,now+i*.08);
+      gain.gain.setValueAtTime(0,now+i*.08);
+      gain.gain.linearRampToValueAtTime(.12,now+i*.08+.02);
+      gain.gain.exponentialRampToValueAtTime(.001,now+i*.08+.7);
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.start(now+i*.08);osc.stop(now+i*.08+.75);
+    });
+  }catch(e){}
+}
+
+async function spinBox(box,finalDigit,duration){
+  box.classList.remove('blank');
+  box.classList.add('spinning');
+  const start=performance.now();
+  while(performance.now()-start<duration){
+    box.textContent=Math.floor(Math.random()*10);
+    await sleep(48);
+  }
+  box.textContent=finalDigit;
+  box.classList.remove('spinning');
+  box.classList.add('locked');
+  await sleep(250);
+  box.classList.remove('locked');
+}
+
+function grandFinal(){
+  [flash,jaan,burst,digitsEl].forEach(el=>{
+    el.classList.remove('on','show','grand-final');
+    void el.offsetWidth;
+  });
+  flash.classList.add('on');
+  jaan.classList.add('show');
+  burst.classList.add('show');
+  digitsEl.classList.add('grand-final');
+  playFinalSound();
+  if(navigator.vibrate) navigator.vibrate([80,50,140]);
+}
+
+async function reveal(){
+  if(running)return;
+  running=true;
+  goBtn.disabled=true;placeBtn.disabled=true;readBtn.disabled=true;
+
+  readingVisible=false;renderReading();
+  placeVisible=false;placeTable.classList.remove('show');
+  placeBtn.textContent="位取り表を表示";
+  resetDisplay();
+
+  current=randomNumber();
+  const ds=String(current).split("").map(Number);
+  const startIndex=8-ds.length;
+
+  for(let i=startIndex;i<8;i++){
+    boxes[i].classList.remove('blank');
+    boxes[i].textContent="";
+  }
+
+  for(let i=7;i>=startIndex;i--){
+    await spinBox(boxes[i],ds[i-startIndex],500+(7-i)*55);
+    if(i>startIndex){
+      // 上の位へ進むほど少し「ため」を強く
+      await sleep(260+(7-i)*35);
+    }
+  }
+
+  grandFinal();
+  await sleep(1150);
+
+  goBtn.disabled=false;placeBtn.disabled=false;readBtn.disabled=false;
+  running=false;
+}
+
+goBtn.addEventListener('click',reveal);
+
+placeBtn.addEventListener('click',()=>{
+  if(running||!current)return;
+  placeVisible=!placeVisible;
+  placeTable.classList.toggle('show',placeVisible);
+  placeBtn.textContent=placeVisible?"位取り表をかくす":"位取り表を表示";
+});
+
+readBtn.addEventListener('click',()=>{
+  if(running||!current)return;
+  readingVisible=!readingVisible;renderReading();
+});
+
+fsBtn.addEventListener('click',async()=>{
+  try{
+    if(!document.fullscreenElement){
+      await document.documentElement.requestFullscreen();
+      fsBtn.textContent="全画面を終了";
+    }else{
+      await document.exitFullscreen();
+      fsBtn.textContent="全画面";
+    }
+  }catch(e){}
+});
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement)fsBtn.textContent="全画面";
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
